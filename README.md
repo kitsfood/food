@@ -1,5 +1,5 @@
 # Kitsilano small grocer prices
-A thin frontend over a csv file to make it easily filtered and sortable and published to the web via Github Pages. 
+A thin frontend over a google sheet/csv-file to make it easily filtered and sortable and published to the web via Github Pages. 
 
 ## Setup
 *If any of these steps are too foreign to you, ask chatgpt to explain how to do it - i.e. https://chatgptdemo.info/chat/*
