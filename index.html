@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filterable, Sortable, and Highlighted Table</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
+        .filter-dropdown {
+            width: 100%;
+        }
+        .highlight {
+            background-color: #f4faff; /* Light-pastel color */
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Filterable, Sortable, and Highlighted Table</h1>
+    <input type="text" id="searchInput" placeholder="Search...">
+    <br><br>
+    <table id="dataTable">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+        const table = document.getElementById('dataTable');
+        let columnNames = [];
+
+        // Parse CSV data and render table
+        Papa.parse('https://docs.google.com/spreadsheets/d/e/2PACX-1vQSiK2G9wnsfo9kMgsFCDlwYj4cTdVVsygTytYBaEDdbhtPJG6fzKj1u58thZPKJ0uXP-5Cdb2PlfLZ/pub?output=csv', {
+            download: true,
+            header: true,
+            complete: function(results) {
+                const data = results.data;
+                columnNames = Object.keys(data[0]);
+                renderTable(data);
+            }
+        });
+
+        function renderTable(data) {
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+
+            // Clear table
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            // Render headers
+            const headerRow = document.createElement('tr');
+            columnNames.forEach(columnName => {
+                const th = document.createElement('th');
+                th.textContent = columnName;
+                th.addEventListener('click', () => sortTable(columnName));
+                headerRow.appendChild(th);
+
+                // Add filter dropdown for each column except 'Store'
+                if ((columnName !== 'Notes') && (columnName !== 'Price per lb') && (columnName !== 'Price Each') && (columnName !== 'Last Update')) {
+                    const filterDropdown = document.createElement('select');
+                    filterDropdown.classList.add('filter-dropdown');
+                    filterDropdown.innerHTML = `<option value="">All</option>`;
+                    const uniqueValues = [...new Set(data.map(item => item[columnName]))];
+                    uniqueValues.forEach(value => {
+                        const option = document.createElement('option');
+                        option.textContent = value;
+                        option.value = value;
+                        filterDropdown.appendChild(option);
+                    });
+                    filterDropdown.addEventListener('change', () => filterTable(columnName, filterDropdown.value));
+                    th.appendChild(filterDropdown);
+                }
+            });
+            thead.appendChild(headerRow);
+
+            // Generate unique color palette for 'Store' column
+            const storeColors = {};
+            const uniqueStoreValues = [...new Set(data.map(item => item['Store']))];
+            uniqueStoreValues.forEach((store, index) => {
+                storeColors[store] = `hsl(${index * (360 / uniqueStoreValues.length)}, 70%, 90%)`;
+            });
+
+            // Render rows
+            data.forEach(rowData => {
+                const row = document.createElement('tr');
+                columnNames.forEach(columnName => {
+                    const cell = document.createElement('td');
+                    cell.textContent = rowData[columnName];
+                    if (columnName === 'Store') {
+                        row.style.backgroundColor = storeColors[rowData['Store']];
+                    }
+                    row.appendChild(cell);
+                });
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterTable(columnName, filterValue) {
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cell = row.querySelector(`td:nth-child(${columnNames.indexOf(columnName) + 1})`);
+                if (filterValue === '' || cell.textContent === filterValue) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function sortTable(columnName) {
+            const index = columnNames.indexOf(columnName);
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+
+            rows.sort((a, b) => {
+                const aValue = a.cells[index].textContent;
+                const bValue = b.cells[index].textContent;
+
+                if (aValue === '' && bValue === '') {
+                    return 0; // If both values are empty, keep them in the current order
+                } else if (aValue === '') {
+                    return 1; // If only aValue is empty, move it to the bottom
+                } else if (bValue === '') {
+                    return -1; // If only bValue is empty, move it to the bottom
+                } else {
+                    return aValue.localeCompare(bValue);
+                }
+            });
+
+            table.querySelector('tbody').innerHTML = '';
+            rows.forEach(row => table.querySelector('tbody').appendChild(row));
+        }
+
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', () => {
+            const searchText = searchInput.value.toLowerCase();
+            const rows = table.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                const cells = Array.from(row.querySelectorAll('td'));
+                const found = cells.some(cell => cell.textContent.toLowerCase().includes(searchText));
+                if (found) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+    </script>
+</body>
+
+</html>
