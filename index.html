@@ -41,9 +41,10 @@
         window.addEventListener('DOMContentLoaded', () => {
         const table = document.getElementById('dataTable');
         let columnNames = [];
+        let docURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQSiK2G9wnsfo9kMgsFCDlwYj4cTdVVsygTytYBaEDdbhtPJG6fzKj1u58thZPKJ0uXP-5Cdb2PlfLZ/pub?output=csv';
 
         // Parse CSV data and render table
-        Papa.parse('https://docs.google.com/spreadsheets/d/e/2PACX-1vQSiK2G9wnsfo9kMgsFCDlwYj4cTdVVsygTytYBaEDdbhtPJG6fzKj1u58thZPKJ0uXP-5Cdb2PlfLZ/pub?output=csv', {
+        Papa.parse(docURL, {
             download: true,
             header: true,
             complete: function(results) {
